@@ -136,6 +136,14 @@ async function uploadFile() {
         return;
     }
 
+    const fileExtension = dicomFile.name.split('.').pop().toLowerCase();
+    
+    if (fileExtension !== "dcm" && fileExtension !== "tiff") {
+        alert("Unsupported file format. Please upload DICOM (.dcm) or TIFF (.tiff) files.");
+        isProcessing = false;
+        return;
+    }
+
     const formData = new FormData();
     formData.append("file", dicomFile);
 
@@ -145,8 +153,8 @@ async function uploadFile() {
     });
 
     if (!response.ok) {
-        const errorData = await response.json(); // Получаем сообщение об ошибке
-        alert(errorData.error || "An error occurred while processing the file.");
+        alert("An error occurred while processing the file.");
+        isProcessing = false;
         return; // Останавливаем выполнение функции
     }
 
@@ -158,6 +166,7 @@ async function uploadFile() {
 
     if (!response1.ok) {
         alert("Failed to retrieve the original image.");
+        isProcessing = false;
         return;
     }
 
@@ -171,7 +180,7 @@ async function uploadFile() {
     // Отрисовка на холстах
     drawOnCanvas(originalCtx, dicomImg, originalCanvas);
     drawOnCanvas(maskCtx, maskImg, maskCanvas);
-
+    
     updateOverlay();
 
     isProcessing = false;
@@ -209,8 +218,20 @@ async function saveEditedMask() {
         body: formData
     });
 
-    const result = await response.json();
-    alert(result.message);
+    const contentDisposition = response.headers.get("Content-Disposition");
+    const fileNameMatch = contentDisposition && contentDisposition.match(/filename="?(.+)"?/);
+    const fileName = fileNameMatch ? fileNameMatch[1] : "prediction.png";
+
+    const blob = await response.blob();
+
+    // Создаем ссылку для скачивания
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 
 // Конвертация DataURL в Blob

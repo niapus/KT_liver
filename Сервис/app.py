@@ -1,6 +1,6 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, StreamingResponse, JSONResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from PIL import Image
 from backend.model import handle_dicom, ndarray_to_image, get_model
 
@@ -12,7 +12,7 @@ from contextlib import asynccontextmanager
 
 model = None
 
-predict_dir = "predictions"
+predict_dir = "Data/predictions" if "AMVERA" in os.environ else "predictions"
 os.makedirs(predict_dir, exist_ok=True)
 
 @asynccontextmanager
@@ -36,13 +36,6 @@ def read_root():
 async def process_image(file: UploadFile = File(...)):
     image_file = await file.read()
     file_extension = file.filename.split(".")[-1].lower()
-    print(file_extension)
-    
-    if file_extension not in ["dcm", "tiff"]:
-        return JSONResponse(
-        content={"error": "Unsupported file format. Please upload DICOM (.dcm) or TIFF (.tiff) files."},
-        status_code=400
-    )
     
     is_dicom = file_extension == "dcm"
     tiff_image = handle_dicom(image_file, is_dicom)
@@ -56,12 +49,25 @@ async def process_image(file: UploadFile = File(...)):
 @app.post("/save_edited_mask")
 async def save_edited_mask(file: UploadFile = File(...)):
     from backend.model import file_name
+    
+    content = await file.read()
+    
     file_path = file_name + "_predict.png"
     file_location = os.path.join(predict_dir, file_path)
     with open(file_location, "wb") as f:
-        f.write(await file.read())
+        f.write(content)
 
-        return {"message": "Mask saved successfully."}
+        from backend.model import file_name
+
+    # Создаем поток с данными изображения
+    file_like = io.BytesIO(content)
+    
+    # Настраиваем HTTP-ответ с содержимым файла
+    return StreamingResponse(
+        file_like,
+        media_type="image/png",
+        headers={"Content-Disposition": f"attachment; filename={file_path}"}
+    )
     
 @app.get("/get_image")
 async def get_dicom_image():
