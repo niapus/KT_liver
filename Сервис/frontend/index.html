@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liver Segmentation Tool</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Liver Segmentation Tool</h1>
+    
+        <div class="upload-container">
+            <input type="file" id="dicomFile" />
+            <button class="upload" onclick="uploadFile()">Upload and Predict</button>
+        </div>
+    
+        <div class="canvas-container">
+            <div class="canvas-column">
+                <h4>Original Image</h4>
+                <canvas id="originalCanvas"></canvas>
+            </div>
+            <div class="canvas-column">
+                <h4>Image with Prediction</h4>
+                <canvas id="overlayCanvas"></canvas>
+            </div>
+            <div class="canvas-column">
+                <h4>Prediction Only</h4>
+                <canvas id="maskCanvas"></canvas>
+            </div>
+        </div>
+
+        <div class="buttons">
+	    <div class="buttons-item">	
+                <button id="drawMode">Draw</button>
+            </div>
+	    <div class="buttons-item">	
+                <button id="eraseMode">Erase</button>
+            </div>
+	    <div class="buttons-item">	
+                <button id="clearPred">Clear Prediction</button>
+            </div>
+            <div class="tools">
+                <label for="lineThickness">Line Thickness:</label>
+                <select id="lineThickness">
+                    <option value=2>Thin</option>
+                    <option value=5>Medium</option>
+                    <option value=10>Thick</option>
+                </select>
+            </div>
+        </div>
+
+    
+        <div class="save-mask-container">
+            <h3>Save Edited Prediction</h3>
+            <button class="save-mask" onclick="saveEditedMask()">Save Prediction</button>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
